@@ -9,7 +9,7 @@ services:
     volumes:
       - ./db:/data
   bot:
-    image: docker.pkg.github.com/nerdcubed/heleus/heleus:8987ec9
+    image: docker.pkg.github.com/nerdcubed/heleus/heleus:943aedc
     restart: always
     depends_on:
       - redis
