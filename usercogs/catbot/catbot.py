@@ -46,7 +46,7 @@ class CatBot(commands.Cog):
             remainder = len(l)
             for item in l:
                 length = len(item) + 2
-                if chars + length >= limit:
+                if (chars + length) <= limit:
                     chars += length
                     final.append(item)
                     remainder -= 1
@@ -87,6 +87,5 @@ class CatBot(commands.Cog):
             message += f'\nDogs: **{dogs_remain}** phrase{"s" if dogs_remain != 1 else ""} that {"are" if dogs_remain != 1 else "is"} too long to fit here!'
         
         if settings['require_mention']:
-            message += f'\n\nYou need to @mention me for me to respond on {ctx.guild.name}!'
+            message += f'\n\nYou need to @mention me for me to respond on **{ctx.guild.name}**!'
         await ctx.send(message)
-        
