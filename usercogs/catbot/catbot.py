@@ -2,6 +2,7 @@ import discord
 import asyncio
 import random
 import aiohttp
+import os
 from discord.ext import commands
 from utils.storage import RedisCollection
 from utils import checks
@@ -27,6 +28,7 @@ class CatBot(commands.Cog):
     def __init__(self, heleus):
         self.heleus = heleus
         self.db = RedisCollection(heleus.redis, 'settings')
+        self.haste_url = os.environ.get('HELEUS_HASTE_URL', 'https://hastebin.com')
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):
@@ -192,6 +194,39 @@ class CatBot(commands.Cog):
             settings['require_mention'] = True
             await ctx.send('🐱 Okay, I will now only respond to messages if they @mention me!')
         await self.db.set(ctx.guild.id, settings)
+    
+    @commands.command()
+    @checks.is_owner()
+    async def block(self, ctx, *, url):
+        """Block a URL from being posted by {0}."""
+        blocked = await self.db.get('blocked', [])
+        if url in blocked:
+            return await ctx.send('😾 That image is already blocked.')
+        blocked.append(url)
+        await self.db.set('blocked', blocked)
+        await ctx.send('😾 That image will not be posted again.')
+    
+    @commands.command()
+    @checks.is_owner()
+    async def unblock(self, ctx, *, url):
+        """Unblocks a URL from being posted by {0}."""
+        blocked = await self.db.get('blocked', [])
+        if url not in blocked:
+            return await ctx.send('😾 That image isn\'t blocked.')
+        blocked.remove(url)
+        await self.db.set('blocked', blocked)
+        await ctx.send('🐱 That image has been unblocked.')
+    
+    @commands.command()
+    @checks.is_owner()
+    async def blocklist(self, ctx):
+        """Returns a paste containing all the blocked URLs."""
+        blocked = await self.db.get('blocked', [])
+        if not blocked:
+            return await ctx.send('🐱 There are no blocked images.')
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f'{self.haste_url}/documents', data='\n'.join(blocked)) as resp:
+                return await ctx.send(f'🐱 Here is a list of blocked images\n\n{self.haste_url}/{resp["key"]}.txt')
 
     async def fetch_cat_pic(self, tries=5):
         blocked = await self.db.get('blocked', [])
