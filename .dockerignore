@@ -1,0 +1,14 @@
+# Default Env File
+bot.env
+
+# Live Database
+db/
+
+# Python Cache
+__pycache__/
+
+# Git Keep Files
+.gitkeep
+
+# Git Repo
+.git/
