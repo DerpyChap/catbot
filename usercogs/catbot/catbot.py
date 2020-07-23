@@ -273,6 +273,8 @@ class CatBot(commands.Cog):
             return await message.channel.send(f'{"😿" if cat else "🐶"} I was unable to find you a {"cat" if cat else "dog"}!')
         
         embed = discord.Embed()
+        if message.guild:
+            embed.colour = message.guild.me.colour
         embed.set_author(
             name=f'{"🐱Cat" if cat else "🐶Dog"} for {message.author.name}',
             url=image
