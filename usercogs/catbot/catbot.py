@@ -111,6 +111,7 @@ class CatBot(commands.Cog):
 
     @phrase.command()
     @commands.guild_only()
+    @checks.admin_or_permissions(manage_guild=True)
     async def add(self, ctx, type: str, *, phrase: str):
         """Add a custom phrase for {0} to respond to.
 
@@ -144,6 +145,7 @@ class CatBot(commands.Cog):
     
     @phrase.command()
     @commands.guild_only()
+    @checks.admin_or_permissions(manage_guild=True)
     async def remove(self, ctx, type: str, *, phrase: str):
         """Remove a custom phrase for {0} to respond to.
 
