@@ -79,24 +79,6 @@ class CatBot(commands.Cog):
                         return '', remainder
             return ', '.join(final), 0
         return '', 0
-    
-    @commands.command(name='import')
-    @checks.is_owner()
-    async def _import(self, ctx, url):
-        """Import settings from the old version of Cat Bot."""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                data = await resp.json(encoding='utf-8', content_type='text/plain')
-        for k, info in data.items():
-            converted = {}
-            converted['cattriggers'] = cattriggers
-            converted['dogtriggers'] = dogtriggers
-            if info['keywordtrigger']:
-                converted['require_mention'] = False
-            else:
-                converted['require_mention'] = True
-            await self.db.set(int(k), converted)
-        await ctx.send('Done.')
 
     @commands.command()
     async def invite(self, ctx):
