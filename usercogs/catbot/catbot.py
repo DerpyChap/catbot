@@ -31,6 +31,7 @@ class CatBot(commands.Cog):
         self.haste_url = os.environ.get('HELEUS_HASTE_URL', 'https://hastebin.com')
         self.help_group = 'General'
         self.help_image = 'https://i.imgur.com/ybGMt1k.png'
+        self.invite_url = discord.utils.oauth_url(self.heleus.user.id)
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):
@@ -78,6 +79,13 @@ class CatBot(commands.Cog):
                         return '', remainder
             return ', '.join(final), 0
         return '', 0
+    
+    @commands.command()
+    async def invite(self, ctx):
+        """Returns Cat Bot's invite link for inviting to your own server."""
+        await ctx.send(f'🐱You can invite me to your server using the following url:\n{self.invite_url}'
+                       '\n\nYou will need the **Manage Server** permission to add me to a server. '
+                       f'Run `{self.heleus.command_prefix[0]}help` to see what you can customise!')
     
     @commands.command()
     async def phrases(self, ctx):
