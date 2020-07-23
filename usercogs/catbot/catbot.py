@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from utils.storage import RedisCollection
+from utils import checks
 
 cattriggers = [
     'cat me',
@@ -60,12 +61,13 @@ class CatBot(commands.Cog):
     
     @commands.command()
     async def phrases(self, ctx):
+        """List all available phrases on the server."""
         settings = await self.fetch_settings(ctx)
         cats, cats_remain = self.format_list(settings['cattriggers'])
         dogs, dogs_remain = self.format_list(settings['dogtriggers'])
 
         if not cats and not dogs:
-            return await ctx.send(f'🐱 I have no phrases to respond to on **{ctx.guild.name}**!')
+            return await ctx.send(f'😿 I have no phrases to respond to on **{ctx.guild.name}**!')
 
         if ctx.channel.type == discord.ChannelType.text:
             message = f'🐱 Here are the phrases used to summon me on **{ctx.guild.name}**:\n'
@@ -89,3 +91,73 @@ class CatBot(commands.Cog):
         if settings['require_mention']:
             message += f'\n\nYou need to @mention me for me to respond on **{ctx.guild.name}**!'
         await ctx.send(message)
+    
+    @commands.group(name='phrase', invoke_without_command=True)
+    @commands.guild_only()
+    @checks.admin_or_permissions(manage_guild=True)
+    async def phrase(self, ctx):
+        """Manage custom phrases for {0} to respond to on your server."""
+        await self.heleus.send_command_help(ctx)
+
+    @phrase.command()
+    @commands.guild_only()
+    async def add(self, ctx, type: str, *, phrase: str):
+        """Add a custom phrase for {0} to respond to.
+
+        Arguments
+        ---------
+         - **type** - The type of animal to respond with, either `cat` or `dog`
+         - **phrase** - The custom phrase for {0} to respond to
+         
+        Example
+        -------
+        `[p]phrase add cat kitty time`"""
+        type = type.lower()
+        if type not in ['cat', 'dog']:
+            return await self.heleus.send_command_help(ctx)
+        phrase = phrase.lower()
+        settings = await self.fetch_settings(ctx)
+        if type == 'cat':
+            if len(settings['dogtriggers']) >= 50:
+                return await ctx.send('😿 You have too many cat phrases!')
+            if phrase in settings['cattriggers']:
+                return await ctx.send('😿 That phrase already exists!')
+            settings['cattriggers'].append(phrase)
+        elif type == 'dog':
+            if len(settings['dogtriggers']) >= 50:
+                return await ctx.send('😿 You have too many dog phrases!')
+            if phrase in settings['dogtriggers']:
+                return await ctx.send('😿 That phrase already exists!')
+            settings['dogtriggers'].append(phrase)
+        await self.db.set(ctx.guild.id, settings)
+        await ctx.send('🐱 Phrase added!')
+    
+    @phrase.command()
+    @commands.guild_only()
+    async def remove(self, ctx, type: str, *, phrase: str):
+        """Remove a custom phrase for {0} to respond to.
+
+        Arguments
+        ---------
+         - **type** - The type of animal to respond with, either `cat` or `dog`
+         - **phrase** - The custom phrase for {0} to respond to
+         
+        Example
+        -------
+        `[p]phrase remove cat kitty time`"""
+        type = type.lower()
+        if type not in ['cat', 'dog']:
+            return await self.heleus.send_command_help(ctx)
+        phrase = phrase.lower()
+        settings = await self.fetch_settings(ctx)
+        if type == 'cat':
+            if phrase not in settings['cattriggers']:
+                return await ctx.send('😿 That phrase doesn\'t exist! Check your spelling and try again.')
+            settings['cattriggers'].remove(phrase)
+        elif type == 'dog':
+            if phrase not in settings['dogtriggers']:
+                return await ctx.send('😿 That phrase doesn\'t exist! Check your spelling and try again.')
+            settings['dogtriggers'].remove(phrase)
+        await self.db.set(ctx.guild.id, settings)
+        await ctx.send('🐱 Phrase removed!')
+    
