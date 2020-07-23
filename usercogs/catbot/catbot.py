@@ -80,6 +80,32 @@ class CatBot(commands.Cog):
             return ', '.join(final), 0
         return '', 0
     
+    @commands.command(name='import')
+    @checks.is_owner()
+    async def _import(self, ctx, url):
+        """Import settings from the old version of Cat Bot."""
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                data = await resp.json(encoding='utf-8', content_type='text/plain')
+        for k, info in data.items():
+            guild = self.heleus.get_guild(int(k))
+            if not guild:
+                print(f'Guild {k} not found')
+                user = self.heleus.get_user(int(k))
+                if user:
+                    print(f'User {user.name} found instead')
+            else:
+                print(f'Found guild {guild.name} ({k})')
+            # converted = {}
+            # converted['cattriggers'] = info['keywords']
+            # converted['dogtriggers'] = dogtriggers
+            # if info['keywordtrigger']:
+            #     converted['require_mention'] = False
+            # else:
+            #     converted['require_mention'] = True
+            # await self.db.set(int(k), converted)
+        await ctx.send('Done.')
+
     @commands.command()
     async def invite(self, ctx):
         """Returns Cat Bot's invite link for inviting to your own server."""
