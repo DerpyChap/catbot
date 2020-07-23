@@ -21,6 +21,16 @@ class CatBot(commands.Cog):
     def __init__(self, heleus):
         self.heleus = heleus
         self.db = RedisCollection(heleus.redis, 'settings')
+
+        for obj in dir(self):  # docstring formatting
+            if obj.startswith('_'):
+                continue
+            obj = getattr(self, obj)
+            if not isinstance(obj, commands.Command):
+                continue
+            if not obj.help:
+                continue
+            obj.help = obj.help.format(self.heleus.name, self.heleus.command_prefix[0])
     
     async def fetch_settings(self, ctx):
         if ctx.channel.type == discord.ChannelType.text:
@@ -111,7 +121,7 @@ class CatBot(commands.Cog):
          
         Example
         -------
-        `[p]phrase add cat kitty time`"""
+        `{1}phrase add cat kitty time`"""
         type = type.lower()
         if type not in ['cat', 'dog']:
             return await self.heleus.send_command_help(ctx)
@@ -144,7 +154,7 @@ class CatBot(commands.Cog):
          
         Example
         -------
-        `[p]phrase remove cat kitty time`"""
+        `{1}phrase remove cat kitty time`"""
         type = type.lower()
         if type not in ['cat', 'dog']:
             return await self.heleus.send_command_help(ctx)
