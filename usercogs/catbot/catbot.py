@@ -1,4 +1,7 @@
 import discord
+import asyncio
+import random
+import aiohttp
 from discord.ext import commands
 from utils.storage import RedisCollection
 from utils import checks
@@ -15,6 +18,9 @@ dogtriggers = [
     'bork me',
     'woof me'
 ]
+
+class FetchFailed(Exception):
+    pass
 
 class CatBot(commands.Cog):
 
@@ -136,12 +142,12 @@ class CatBot(commands.Cog):
             settings['cattriggers'].append(phrase)
         elif type == 'dog':
             if len(settings['dogtriggers']) >= 50:
-                return await ctx.send('😿 You have too many dog phrases!')
+                return await ctx.send('🐶 You have too many dog phrases!')
             if phrase in settings['dogtriggers']:
-                return await ctx.send('😿 That phrase already exists!')
+                return await ctx.send('🐶 That phrase already exists!')
             settings['dogtriggers'].append(phrase)
         await self.db.set(ctx.guild.id, settings)
-        await ctx.send('🐱 Phrase added!')
+        await ctx.send(f'{"🐱" if type == "cat" else "🐶"} Phrase added!')
     
     @phrase.command()
     @commands.guild_only()
@@ -168,10 +174,10 @@ class CatBot(commands.Cog):
             settings['cattriggers'].remove(phrase)
         elif type == 'dog':
             if phrase not in settings['dogtriggers']:
-                return await ctx.send('😿 That phrase doesn\'t exist! Check your spelling and try again.')
+                return await ctx.send('🐶 That phrase doesn\'t exist! Check your spelling and try again.')
             settings['dogtriggers'].remove(phrase)
         await self.db.set(ctx.guild.id, settings)
-        await ctx.send('🐱 Phrase removed!')
+        await ctx.send(f'{"🐱" if type == "cat" else "🐶"} Phrase removed!')
     
     @commands.command()
     @commands.guild_only()
@@ -186,3 +192,91 @@ class CatBot(commands.Cog):
             settings['require_mention'] = True
             await ctx.send('🐱 Okay, I will now only respond to messages if they @mention me!')
         await self.db.set(ctx.guild.id, settings)
+
+    async def fetch_cat_pic(self, tries=5):
+        blocked = await self.db.get('blocked', [])
+        async with aiohttp.ClientSession() as session:
+            for i in range(tries):
+                async with session.get("https://api.thecatapi.com/v1/images/search") as resp:
+                    if resp.status != 200:
+                        await asyncio.sleep(0.2)
+                        continue
+                    data = await resp.json(encoding='utf-8')
+                    image = data[0]['url']
+                    if image in blocked:
+                        continue
+                    return image
+        raise FetchFailed
+    
+    async def fetch_dog_pic(self, tries=5):
+        blocked = await self.db.get('blocked', [])
+        async with aiohttp.ClientSession() as session:
+            for i in range(tries):
+                async with session.get("https://dog.ceo/api/breeds/image/random") as resp:
+                    if resp.status != 200:
+                        await asyncio.sleep(0.2)
+                        continue
+                    data = await resp.json(encoding='utf-8')
+                    image = data['message']
+                    if image in blocked:
+                        continue
+                    return image
+        raise FetchFailed
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author == self.heleus.user:
+            return
+        if message.author.bot:
+            return
+        if message.author.public_flags.system:
+            return
+        if message.flags.is_crossposted:
+
+            return
+        
+        settings = await self.fetch_settings(message)
+        if settings['require_mention'] and not self.heleus.user in message.mentions:
+            return
+        
+        if message.guild:
+            if not message.channel.permissions_for(message.guild.me).send_messages:
+                return
+            if not message.channel.permissions_for(message.guild.me).embed_links:
+                return await message.channel.send(f'😿I\'m not allowed to send images in here!')
+        
+        cat = False
+        dog = False
+        for phrase in settings['cattriggers']:
+            if phrase in message.content.lower():
+                cat = True
+                break
+        for phrase in settings['dogtriggers']:
+            if phrase in message.content.lower():
+                dog = True
+                break
+        if cat and dog:
+            pick = random.choice(['cat', 'dog'])
+            if pick == 'cat':
+                dog = False
+            else:
+                cat = False
+        elif not cat and not dog:
+            return
+        await message.channel.trigger_typing()
+        try:
+            if cat:
+                image = await self.fetch_cat_pic()
+            else:
+                image = await self.fetch_dog_pic()
+        except FetchFailed:
+            return await message.channel.send(f'{"😿" if cat else "🐶"} I was unable to find you a {"cat" if cat else "dog"}!')
+        
+        embed = discord.Embed()
+        embed.set_author(
+            name=f'{"🐱Cat" if cat else "🐶Dog"} for {message.author.name}',
+            url=image
+        )
+        embed.set_image(url=image)
+
+        await message.channel.send(embed=embed)
