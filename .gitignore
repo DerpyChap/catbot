@@ -1,0 +1,11 @@
+# VSCode Stuff
+.vscode
+
+# Default Env File
+bot.env
+
+# Live Database
+db/
+
+# Python Cache
+__pycache__/
