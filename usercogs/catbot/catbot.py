@@ -117,8 +117,8 @@ class CatBot(commands.Cog):
 
         Arguments
         ---------
-         - **type** - The type of animal to respond with, either `cat` or `dog`
-         - **phrase** - The custom phrase for {0} to respond to
+         `type` - The type of animal to respond with, either `cat` or `dog`
+         `phrase` - The custom phrase for {0} to respond to
          
         Example
         -------
@@ -151,8 +151,8 @@ class CatBot(commands.Cog):
 
         Arguments
         ---------
-         - **type** - The type of animal to respond with, either `cat` or `dog`
-         - **phrase** - The custom phrase for {0} to respond to
+        `type` - The type of animal to respond with, either `cat` or `dog`
+        `phrase` - The custom phrase for {0} to respond to
          
         Example
         -------
