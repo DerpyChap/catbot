@@ -88,22 +88,14 @@ class CatBot(commands.Cog):
             async with session.get(url) as resp:
                 data = await resp.json(encoding='utf-8', content_type='text/plain')
         for k, info in data.items():
-            guild = self.heleus.get_guild(int(k))
-            if not guild:
-                print(f'Guild {k} not found')
-                user = self.heleus.get_user(int(k))
-                if user:
-                    print(f'User {user.name} found instead')
+            converted = {}
+            converted['cattriggers'] = cattriggers
+            converted['dogtriggers'] = dogtriggers
+            if info['keywordtrigger']:
+                converted['require_mention'] = False
             else:
-                print(f'Found guild {guild.name} ({k})')
-            # converted = {}
-            # converted['cattriggers'] = info['keywords']
-            # converted['dogtriggers'] = dogtriggers
-            # if info['keywordtrigger']:
-            #     converted['require_mention'] = False
-            # else:
-            #     converted['require_mention'] = True
-            # await self.db.set(int(k), converted)
+                converted['require_mention'] = True
+            await self.db.set(int(k), converted)
         await ctx.send('Done.')
 
     @commands.command()
