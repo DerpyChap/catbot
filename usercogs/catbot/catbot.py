@@ -173,3 +173,16 @@ class CatBot(commands.Cog):
         await self.db.set(ctx.guild.id, settings)
         await ctx.send('🐱 Phrase removed!')
     
+    @commands.command()
+    @commands.guild_only()
+    @checks.admin_or_permissions(manage_guild=True)
+    async def mention(self, ctx):
+        """Toggle if mentioning {0} is required for them to respond to messages."""
+        settings = await self.fetch_settings(ctx)
+        if settings['require_mention']:
+            settings['require_mention'] = False
+            await ctx.send('🐱 Okay, I no longer need to be @mentioned for me to respond to messages!')
+        else:
+            settings['require_mention'] = True
+            await ctx.send('🐱 Okay, I will now only respond to messages if they @mention me!')
+        await self.db.set(ctx.guild.id, settings)
