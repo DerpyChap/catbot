@@ -243,7 +243,7 @@ class CatBot(commands.Cog):
             if not message.channel.permissions_for(message.guild.me).send_messages:
                 return
             if not message.channel.permissions_for(message.guild.me).embed_links:
-                return await message.channel.send(f'😿I\'m not allowed to send images in here!')
+                return await message.channel.send(f'😿 I\'m not allowed to send images in here!')
         
         cat = False
         dog = False
