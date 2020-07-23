@@ -29,6 +29,8 @@ class CatBot(commands.Cog):
         self.heleus = heleus
         self.db = RedisCollection(heleus.redis, 'settings')
         self.haste_url = os.environ.get('HELEUS_HASTE_URL', 'https://hastebin.com')
+        self.help_group = 'General'
+        self.help_image = 'https://i.imgur.com/ybGMt1k.png'
 
         for obj in dir(self):  # docstring formatting
             if obj.startswith('_'):

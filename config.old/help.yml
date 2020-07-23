@@ -1,0 +1,6 @@
+description: Cat Bot is a Discord bot for receiving cat and dog pictures on request, written by DerpyChap.
+thumbnail:
+    url: https://i.imgur.com/ybGMt1k.png
+fields: 
+    - name: GitHub Repo
+      value: https://github.com/DerpyChap/catbot
